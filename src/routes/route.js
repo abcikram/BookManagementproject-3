@@ -56,9 +56,9 @@ router.delete("/books/:bookId/review/:reviewId", reviewController.deleteReviewBy
 //____________________additional api for testing router path________________________________________//
 
 router.all("/****",function(req,res){
-    return res.status(400).send({
+    return res.status(404).send({
         status:false,
-        message:"Make sure your endpoint currect or not"})
+        message:"path not found"})
 })
 
 module.exports = router

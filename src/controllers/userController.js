@@ -18,35 +18,37 @@ const createUser = async function (req, res) {
         let { title, name, phone, email, password } = user;
 
         if (!isValid(title)) return res.status(400).send({ status: false, message: "title is required" })
-        
+
         // validation for title:-
         if (!["Mr", "Miss", "Mrs"].includes(title)) return res.status(400).send({ status: false, message: "title must be Mr ,Mrs ,Miss" })
 
         if (!isValid(name)) return res.status(400).send({ status: false, message: "Name is required , name must be string" })
 
         if (!isValid(phone)) return res.status(400).send({ status: false, message: "Phone number is required" })
-        
+
         // validation for phone number:-
         if (!isValidPhone(phone)) return res.status(400).send({ status: false, message: "Enter valid number, number must in ten digit" })
-        
+
         //  db call for checking duplicate number exists :-
         let phones = await userModel.findOne({ phone: phone })
         if (phones) return res.status(409).send({ status: false, message: "Phone number is already exists" })
 
         if (!isValid(email)) return res.status(400).send({ status: false, message: "email is required" })
-        
+
         // validation for email:-
         if (!isVAlidEmail(email)) return res.status(400).send({ status: false, message: "Please provide the valid email address" })
-        
-        
+
+
         //  db call for checking duplicate number exists:-
         let emails = await userModel.findOne({ email: email })
         if (emails) return res.status(409).send({ status: false, message: "email is already exists" })
 
         if (!isValid(password)) return res.status(400).send({ status: false, message: "Password is required" })
-        
-         // validation for password:-
+
+        // validation for password:-
         if (!isValidPassword(password)) return res.status(400).send({ status: false, message: "password must be in 8 to 15 & password must contain uppercase lowercase and one special character" })
+
+        if (typeof (user.address) !== "object") return res.status(400).send({ status: false, message: "address should be in object format" })
 
         // creating user :-
         let userCreated = await userModel.create(user);
@@ -71,7 +73,7 @@ const userLogin = async function (req, res) {
         if (!(email)) {
             return res.status(400).send({ status: false, message: "Email is required!!" })
         }
-         
+
         // check email for user
         let user = await userModel.findOne({ email: email });
         if (!user) return res.status(400).send({ status: false, message: "Email is not correct, Please provide valid email" });
@@ -86,7 +88,7 @@ const userLogin = async function (req, res) {
 
         let userid = await userModel.findOne({ email: email, password: password })
 
-        
+
         // using jwt for creating token
         let token = jwt.sign(
             {
@@ -96,7 +98,7 @@ const userLogin = async function (req, res) {
             "Project3-Group24"
         );
 
-        res.status(200).send({ status: true, message: "Success", token: token });
+        res.status(200).send({ status: true, message: "Success", data: token });
     }
     catch (err) {
         res.status(500).send({ status: false, Error: err.message });

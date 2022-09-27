@@ -18,7 +18,7 @@ const createReviews = async function (req, res) {
             }
         }
         // checking book is present in db
-        let book = await booksModel.findOne({ _id: bookId, isDeleted: false }).lean()  
+        let book = await booksModel.findOne({ _id: bookId, isDeleted: false }).lean()
         //using lean u can add key in existing document 
 
         if (!book) return res.status(400).send({ status: false, message: "Book does not exist!!" })
@@ -30,13 +30,19 @@ const createReviews = async function (req, res) {
         if (data.review) {
             if (typeof data.review == 'number') return res.status(400).send({ status: false, message: "Review must in letters." })
         }
-        if(!data.reviewedAt) return res.status(400).send({ status: false, message: "Review at is mandatory." })
-        if(!isValidrele(data.reviewedAt)) return res.status(400).send({ status:false , message:"reviewedAt should be (yyyy-mm-dd) format and enter valid month , day and year"})
+        //if(!data.reviewedAt) return res.status(400).send({ status: false, message: "Review at is mandatory." })
+        if (!data.reviewedAt) data["reviewedAt"] = Date.now()
+        if (data.reviewedAt) {
+            if (!isValidrele(data.reviewedAt)) return res.status(400).send({ status: false, message: "reviewedAt should be (yyyy-mm-dd) format and enter valid month , day and year" })
+            data["reviewedAt"] = data.reviewedAt
+        }
 
-        
+
+
+
         // reviewer name
         if (data.reviewedBy) {
-            data["reviewedBy"] = data.reviewedBy   
+            data["reviewedBy"] = data.reviewedBy
         }
 
         // if reviewer don't mention name then it will take by default: 'Guest'
@@ -59,7 +65,7 @@ const createReviews = async function (req, res) {
 
         // update reviews count in book document after recieved review
         book['reviews'] = reviews
-        await booksModel.findOneAndUpdate({_id: bookId, isDeleted: false}, {$set: {reviews: reviews}})
+        await booksModel.findOneAndUpdate({ _id: bookId, isDeleted: false }, { $set: { reviews: reviews } })
 
         res.status(201).send({ status: true, message: "Review created", data: book })
     }
@@ -101,15 +107,15 @@ const updateReview = async function (req, res) {
             let updateReviews = await reviewModel.findOneAndUpdate({ _id: reviewId, bookId: bookId }, { $set: data }, { new: true })
             // finding the book data form bookid params:-
             let book = await booksModel.findOne({ _id: bookId, isDeleted: false }).lean()
-            
+
             // it is for current reviews number :-
             let reviews = await reviewModel.find({ bookId: bookId, isDeleted: false }).count()
-             
+
             // add(merge) reviewData key in book document :-
             book['reviewsData'] = updateReviews
             // update reviews count in book document after recieved review :-
             book['reviews'] = reviews
-           
+
             return res.status(200).send({ status: true, data: book })
         }
         else {
@@ -148,7 +154,7 @@ const deleteReviewById = async function (req, res) {
         }
 
         let deletebooks = await reviewModel.findByIdAndUpdate(reviewId
-            , { isDeleted: true}
+            , { isDeleted: true, deletedAt: Date.now() }
             , { new: true })
 
         let updateBook = await booksModel.findOneAndUpdate({ _id: bookId }, { $inc: { reviews: -1 } }, { new: true })
